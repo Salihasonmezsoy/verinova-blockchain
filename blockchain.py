@@ -32,17 +32,18 @@ class Blockchain:
     previous_block = self.chain[-1]
     new_index = previous_block.index + 1
     previous_hash = previous_block.hash
-    previous_proof = previous_block.proof
+    previous_proof = previous_block.proof-
 
     new_proof = self.proof_of_work(previous_proof, new_index, new_data)
 
     new_block = Block(new_index, new_data, previous_hash, new_proof)
     self.chain.append(new_block)
+    return new_block
 
   def proof_of_work(self, previous_proof, index, data):
     proof = 0
 
-    while self.cvalid_proof(proof, previous_proof, index, data) is False:
+    while self.valid_proof(proof, previous_proof, index, data) is False:
       proof += 1
 
     return proof
