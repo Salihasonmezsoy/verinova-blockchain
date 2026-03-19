@@ -1,46 +1,44 @@
-#blockchain ve veri tabanı bağlanacak ve veri tabanında değişiklik yapılabşlecek
+from fastapi import FastAPI, HTTPException, Depends
+from pydantic import BaseModel
+from blockchain import Blockchain
 
-from fastapi import Depends, FastAPI, HTTPException
-from blockchain import _blockchain, Block
-from pydantic import BaseModel 
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
-from typing import Dict, Any
-
-#python ve mySQL arasında köprü kuruyor
-db_url = "gelecek olan url"
-
-engine = create_engine(db_url)
-sessionlocal = sessionmaker(autocommit= False, autoflush=False, bind=engine)
-base = declarative_base()
 app = FastAPI()
 
-my_blockchain = _blockchain.Blockchain()
+db_config = {
+  "host": "localhost",
+  "user": "root",
+  "password": "12345",
+  "database": "kutuphane_db"
+}
 
-class model(BaseModel):
-  table_name: str
-  datas: Dict[str, Any]
+class BlockData(BaseModel):
+  data:str
+
+blockchain_= Blockchain()
+
+def get_valid_blockchain():
+  if not blockchain_.is_chain_valid():
+    raise HTTPException(status_code=400, detail="The chain is invalid")
+  return blockchain_
 
 
-
-@app.post("/add_data/")
-def add_data( process: model):
-  new_block = my_blockchain.add_block(new_data = block_data.data)
+@app.post("/mine_block/")
+def mine_block(block_data: BlockData,
+               blockchain: Blockchain = Depends(get_valid_blockchain)):
+  new_block = blockchain.add_block(new_data=block_data.data)
   return new_block.__dict__
 
-@app.get("/blockchain/")
-def get_blockchain():
-  chain_json = [block.__dict__ for block in my_blockchain.chain]
-  return chain_json
 
-app.get("/validate/")
-def validate_blockchain():
-  is_valid = my_blockchain.is_chain_valid()
+@app.get("/get_blockchain/")
+def get_blockchain(blockchain: Blockchain = Depends(get_valid_blockchain)):
+  chain_data = [block.__dict__ for block in blockchain.chain]
+  return {"lenght": len(blockchain.chain), "chain": chain_data}
 
-  if is_valid:
-    return False
-  else:
-    raise HTTPException(status_code=400, detail="DİKKAT! Blockchain geçersiz. Verilerle oynanmış olabilir")
-  
+@app.get("/blockchain/last/")
+def get_previous_block(blockchain: Blockchain= Depends(get_valid_blockchain)):
+  return blockchain.get_previous_block()
 
-    
+@app.get("/validate")
+def is_block_valid():
+  is_valid = blockchain_.is_chain_valid()
+  return {"is_valid": is_valid}

@@ -32,7 +32,7 @@ class Blockchain:
     previous_block = self.chain[-1]
     new_index = previous_block.index + 1
     previous_hash = previous_block.hash
-    previous_proof = previous_block.proof-
+    previous_proof = previous_block.proof
 
     new_proof = self.proof_of_work(previous_proof, new_index, new_data)
 
